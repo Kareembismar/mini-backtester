@@ -24,5 +24,29 @@ def signals(prices, ma, window):
         
     return calls
 
+def simulate(prices, calls, window, starting_cash):
+    cash = starting_cash
+    shares = 0.0
+    for k in range(len(calls)):
+        today_price = prices[k + window - 1]  
+        call = calls[k] # same alignment as signals!
+
+        if call == "BUY" and cash > 0:
+            shares = cash / today_price
+            cash = 0 
+        if call == "SELL" and shares>0: 
+            cash = shares * today_price
+            shares = 0
+
+    if shares > 0:
+        cash = shares * prices[-1]
+
+    return cash
+
 averages = moving_average(prices, 3)
 print(signals(prices, averages, 3))
+
+
+final = simulate(prices, signals(prices, averages, 3), 3, 1000.0)
+print(f"Final: ${final:.2f}")
+
