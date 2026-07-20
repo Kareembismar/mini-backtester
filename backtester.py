@@ -30,47 +30,50 @@ def signals(prices, ma, window):
         
     return calls
 
-def simulate(prices, calls, window, starting_cash):
+def simulate(prices, calls, window, starting_cash, fee):
     cash = starting_cash
     shares = 0.0
-    trades = 0                             
+    trades = 0                           
     for k in range(len(calls)):
         today_price = prices[k + window - 1]
         call = calls[k]
 
         if call == "BUY" and cash > 0:
-            shares = cash / today_price
+            shares = (cash * (1-fee)) / today_price
             cash = 0
             trades += 1                     
         if call == "SELL" and shares > 0:
-            cash = shares * today_price
+            cash = ((shares * today_price) * (1-fee))
             shares = 0
             trades += 1                     
     if shares > 0:
-        cash = shares * prices[-1]
+        cash = ((shares * prices[-1])*(1-fee))
 
     return cash, trades                    
 
 def tournament(runs):
-    wins = 0                                          
-    total = 0.0                                       
+    total_clean = 0.0
+    total_fees = 0.0
+    fee_taxed = 0.001
     for r in range(runs):
-        prices = random_prices(100, 100.0)            
-        averages = moving_average(prices, 3)          
-        calls = signals(prices, averages, 3)          
-        final, trades = simulate(prices, calls, 3, 1000.0)   
-        if final > 1000:                             
-            wins += 1
-        total += final                                
-    print(f"Bot record: {wins}/{runs} wins")
-    print(f"Average finish: ${total / runs:.2f}")
+        prices = random_prices(100, 100.0)
+        averages = moving_average(prices, 3)
+        calls = signals(prices, averages, 3)
+        final_clean, t1 = simulate(prices, calls, 3, 1000.0, 0.0)
+        final_fees, t2 = simulate(prices, calls, 3, 1000.0, fee_taxed)
+        total_clean += final_clean
+        total_fees += final_fees
+    print(f"Avg finish (no fees):   ${total_clean / runs:.2f}")
+    print(f"Avg finish (0.1% fee):  ${total_fees / runs:.2f}")
+    print(f"Fee drag per run:       ${(total_clean - total_fees) / runs:.2f}")
 
 tournament(50)
 
 prices = random_prices(100, 100.0)
 averages = moving_average(prices, 3)
-print(signals(prices, averages, 3))
 
 calls = signals(prices, averages, 3)
-final, trades = simulate(prices, calls, 3, 1000.0)
+fee = 0.001
+final, trades = simulate(prices, calls, 3, 1000.0, fee)
 print(f"Final: ${final:.2f} ({trades} trades)")
+
