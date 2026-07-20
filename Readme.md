@@ -1,1 +1,0 @@
-tiny stock backtester — daily returns, moving average, buy/sell signals

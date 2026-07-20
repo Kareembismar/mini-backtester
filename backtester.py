@@ -69,6 +69,7 @@ def tournament(runs):
 
 tournament(50)
 
+print("--- single run demo ---")
 prices = random_prices(100, 100.0)
 averages = moving_average(prices, 3)
 
